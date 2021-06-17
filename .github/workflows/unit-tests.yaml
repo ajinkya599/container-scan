@@ -4,10 +4,10 @@ on: # rebuild any PRs and main branch changes
     branches:
       - master
       - 'releases/*'
-  push:
-    branches:
-      - master
-      - 'releases/*'
+  # push:
+  #   branches:
+  #     - master
+  #     - 'releases/*'
 
 jobs:
   build: # make sure build/ci works properly
