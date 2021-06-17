@@ -1,0 +1,69 @@
+name: "Release action"
+on: # rebuild any PRs and main branch changes
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Action version. Example: v1.0.1'
+        required: true
+        default: 'v0.0.0'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '14'
+      
+      - name: Configure git
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+          git remote set-url origin https://github-actions:${{ secrets.GITHUB_TOKEN }}@github.com/ajinkya599/container-scan 
+          git remote -v
+      - name: Create local branch releases/${{ github.event.inputs.version}}
+        run: |
+          git checkout -b releases/${{ github.event.inputs.version}}
+
+      - name: Build code
+        run: |
+          npm install
+          npm run-script build
+          npm prune --production
+
+      - name: Detect major version
+        run: |
+          # Logic to identify major version of release
+          version=${{ github.event.inputs.version}}
+          semver=(${version//./ })
+          echo "MAJOR_VERSION=${semver[0]}" >> $GITHUB_ENV
+          echo "Release major version is: ${semver[0]}"
+
+      - name: Commit and push
+        run: |
+          git status
+
+          echo "git add -f lib/"
+          git add -f lib/
+
+          echo "git add -f node_modules/"
+          git add -f node_modules/
+
+          echo "committing files"
+          git commit -m "[Automation]: Adding generated files - js files and node_modules"
+
+          echo "git push origin -u releases/${{ github.event.inputs.version}}"
+          git push origin -u releases/${{ github.event.inputs.version}}
+
+          echo "Adding tag ${{ github.event.inputs.version}}"
+          git tag -a ${{ github.event.inputs.version}} -m "Created ${{ github.event.inputs.version}} release"
+
+          echo "git push origin ${{ github.event.inputs.version}}"
+          git push origin ${{ github.event.inputs.version}}
+
+          echo "Adding/Updating tag ${{ env.MAJOR_VERSION }}"
+          git tag -fa ${{ env.MAJOR_VERSION }} -m "Add/update ${{ env.MAJOR_VERSION }} tag referencing -> ${{ github.event.inputs.version}}"
+
+          echo "git push origin ${{ env.MAJOR_VERSION }} --force"
+          git push origin ${{ env.MAJOR_VERSION }} --force
