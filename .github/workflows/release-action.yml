@@ -1,0 +1,56 @@
+name: "Release action"
+on: # rebuild any PRs and main branch changes
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Action version. Example: v1.0.1'
+        required: true
+        default: 'v0.0.0'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '14'
+      
+      - name: Configure git
+        run: |
+          git config --global user.email "github-action-person@dummy.com"
+          git config --global user.name "GitHub action person"
+          git remote set-url origin https://ajinkya599:${{ secrets.GITHUB_TOKEN }}@github.com/ajinkya599/container-scan 
+          git remote -v
+      - name: Create local branch releases/${{ github.event.inputs.version}}
+        run: |
+          git checkout -b releases/${{ github.event.inputs.version}}
+
+      - name: Build code
+        run: |
+          npm install
+          npm run-script build
+          npm prune --production
+
+      # - name: Detect major version
+      #   run: |
+      #     # Logic to identify major version of release
+
+      - name: Commit and push
+        run: |
+          git status
+
+          echo "git add -f lib/"
+          git add -f lib/
+
+          echo "git add -f node_modules/"
+          git add -f node_modules/
+
+          echo "committing files"
+          git commit -m "[Automation]: Adding generated files - js files and node_modules"
+
+          echo "Adding tag"
+          git tag -a ${{ github.event.inputs.version}} -m "Created ${{ github.event.inputs.version}} release"
+
+          echo "git push origin --tags"
+          git push origin --tags
