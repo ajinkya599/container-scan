@@ -1,4 +1,4 @@
-name: 'Container image scan'
+name: '[Test] Container image scan'
 description: 'Scan container images for vulnerabilities and CIS guidelines'
 inputs:
   image-name:
