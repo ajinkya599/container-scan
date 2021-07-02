@@ -1,9 +1,10 @@
 name: "Run unit tests."
 on: # rebuild any PRs and main branch changes
-  pull_request:
-    branches:
-      - master
-      - 'releases/*'
+  workflow_dispatch:
+#   pull_request:
+#     branches:
+#       - master
+#       - 'releases/*'
   # push:
   #   branches:
   #     - master
